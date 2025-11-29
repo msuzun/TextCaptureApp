@@ -1,0 +1,133 @@
+﻿<Window x:Class="TextCaptureApp.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TextCaptureApp.UI"
+        mc:Ignorable="d"
+        Title="Text Capture App - OCR and Export" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen">
+    
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1976D2"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        
+        <Style TargetType="ComboBox">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Top Action Buttons -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+            <Button x:Name="BtnCaptureScreen" Content="📷 Capture Screen" Click="BtnCaptureScreen_Click"/>
+            <Button x:Name="BtnCaptureRegion" Content="🖼️ Capture Region" Click="BtnCaptureRegion_Click"/>
+            <Button x:Name="BtnExtractText" Content="🔍 Extract Text (OCR)" Click="BtnExtractText_Click" IsEnabled="False"/>
+        </StackPanel>
+        
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Left Panel: Captured Image -->
+            <Border Grid.Column="0" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="4" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Grid.Row="0" Text="Captured Image" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    
+                    <Border Grid.Row="1" Background="#F5F5F5" CornerRadius="4">
+                        <Image x:Name="ImgCaptured" Stretch="Uniform"/>
+                    </Border>
+                </Grid>
+            </Border>
+            
+            <!-- Right Panel: Extracted Text -->
+            <Border Grid.Column="2" BorderBrush="#EEEEEE" BorderThickness="1" CornerRadius="4" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="Extracted Text" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtConfidence" Margin="10,0,0,0" FontSize="11" Foreground="#666666" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <TextBox Grid.Row="1" 
+                             x:Name="TxtExtracted" 
+                             AcceptsReturn="True" 
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             FontFamily="Consolas"/>
+                    
+                    <StackPanel Grid.Row="2" Margin="0,10,0,0">
+                        <TextBlock Text="Language:" FontSize="11" Margin="5,0"/>
+                        <ComboBox x:Name="CmbLanguage" SelectedIndex="0">
+                            <ComboBoxItem Content="English (eng)"/>
+                            <ComboBoxItem Content="Turkish (tur)"/>
+                            <ComboBoxItem Content="German (deu)"/>
+                            <ComboBoxItem Content="French (fra)"/>
+                            <ComboBoxItem Content="Spanish (spa)"/>
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        
+        <!-- Bottom Export Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button x:Name="BtnExportTxt" Content="💾 Export TXT" Click="BtnExportTxt_Click" IsEnabled="False"/>
+            <Button x:Name="BtnExportPdf" Content="📄 Export PDF" Click="BtnExportPdf_Click" IsEnabled="False" Background="#FF5722"/>
+            <Button x:Name="BtnExportDocx" Content="📝 Export DOCX" Click="BtnExportDocx_Click" IsEnabled="False" Background="#4CAF50"/>
+            <Button x:Name="BtnGenerateTts" Content="🔊 Generate Speech" Click="BtnGenerateTts_Click" IsEnabled="False" Background="#9C27B0"/>
+        </StackPanel>
+    </Grid>
+</Window>
