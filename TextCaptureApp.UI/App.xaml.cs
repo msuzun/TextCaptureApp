@@ -1,8 +1,8 @@
 ﻿using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TextCaptureApp.Core.Interfaces;
-using TextCaptureApp.Core.Models;
 using TextCaptureApp.Ocr.Services;
 using TextCaptureApp.ScreenCapture.Services;
 using TextCaptureApp.Export.Services;
@@ -21,27 +21,50 @@ public partial class App : Application
     public App()
     {
         _host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                // appsettings.json dosyasını yükle
+                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
             .ConfigureServices((context, services) =>
             {
-                ConfigureServices(services);
+                ConfigureServices(context.Configuration, services);
             })
             .Build();
     }
 
-    private void ConfigureServices(IServiceCollection services)
+    private void ConfigureServices(IConfiguration configuration, IServiceCollection services)
     {
+        // Configuration sections
+        var ocrConfig = configuration.GetSection("Ocr");
+        var ttsConfig = configuration.GetSection("Tts");
+
         // Register UI services
         services.AddSingleton<IRegionSelector, WpfRegionSelector>();
 
-        // Register core services
+        // Register core services with configuration
         services.AddSingleton<IScreenCaptureService>(sp =>
         {
             var regionSelector = sp.GetService<IRegionSelector>();
             return new ScreenCaptureService(regionSelector);
         });
-        services.AddSingleton<IOcrService>(sp => 
-            new TesseractOcrService(tessDataPath: "./tessdata", defaultLanguage: "tur+eng"));
-        services.AddSingleton<ITtsService, BasicTtsService>();
+
+        // OCR Service with configuration
+        services.AddSingleton<IOcrService>(sp =>
+        {
+            var tessDataPath = ocrConfig["TessDataPath"] ?? "./tessdata";
+            var defaultLanguage = ocrConfig["DefaultLanguage"] ?? "tur+eng";
+            return new TesseractOcrService(tessDataPath, defaultLanguage);
+        });
+
+        // TTS Service with configuration
+        services.AddSingleton<ITtsService>(sp =>
+        {
+            var speechRate = int.TryParse(ttsConfig["SpeechRate"], out var rate) ? rate : 0;
+            var volume = int.TryParse(ttsConfig["Volume"], out var vol) ? vol : 100;
+            var voiceName = ttsConfig["VoiceName"] ?? "";
+            return new BasicTtsService(speechRate, volume, voiceName);
+        });
 
         // Register composite export service
         services.AddSingleton<ITextExportService, CompositeTextExportService>();
@@ -68,4 +91,3 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
-
