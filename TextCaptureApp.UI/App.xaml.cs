@@ -2,10 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TextCaptureApp.Core.Interfaces;
-using TextCaptureApp.Ocr;
-using TextCaptureApp.ScreenCapture;
-using TextCaptureApp.Export;
-using TextCaptureApp.Tts;
+using TextCaptureApp.Core.Models;
+using TextCaptureApp.Ocr.Services;
+using TextCaptureApp.ScreenCapture.Services;
+using TextCaptureApp.Export.Services;
+using TextCaptureApp.Tts.Services;
 
 namespace TextCaptureApp.UI;
 
@@ -28,11 +29,23 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Register all services with their interfaces
+        // Register core services
         services.AddSingleton<IScreenCaptureService, ScreenCaptureService>();
-        services.AddSingleton<ITextExtractionService>(sp => new TextExtractionService("./tessdata"));
-        services.AddSingleton<ITextExportService, TextExportService>();
+        services.AddSingleton<IOcrService>(sp => new TesseractOcrService("./tessdata"));
         services.AddSingleton<ITtsService, TtsService>();
+
+        // Register export services (Strategy pattern)
+        services.AddSingleton<ITextExportService, TxtExportService>();
+        services.AddSingleton<ITextExportService, PdfExportService>();
+        services.AddSingleton<ITextExportService, DocxExportService>();
+
+        // Register export service factory/resolver
+        services.AddSingleton<ExportServiceResolver>(sp =>
+        {
+            var exportServices = sp.GetServices<ITextExportService>();
+            return format => exportServices.FirstOrDefault(s => s.IsFormatSupported(format))
+                ?? throw new NotSupportedException($"Export format {format} is not supported");
+        });
 
         // Register MainWindow
         services.AddTransient<MainWindow>();
@@ -56,4 +69,9 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+
+/// <summary>
+/// Export servislerini format'a göre çözümleyen delegate
+/// </summary>
+public delegate ITextExportService ExportServiceResolver(ExportFormat format);
 

@@ -4,23 +4,23 @@ using Tesseract;
 using TextCaptureApp.Core.Interfaces;
 using TextCaptureApp.Core.Models;
 
-namespace TextCaptureApp.Ocr;
+namespace TextCaptureApp.Ocr.Services;
 
 /// <summary>
 /// Tesseract OCR tabanlı metin çıkarma servisi
 /// </summary>
-public class TextExtractionService : ITextExtractionService, IDisposable
+public class TesseractOcrService : IOcrService, IDisposable
 {
     private readonly string _tessDataPath;
     private TesseractEngine? _engine;
     private bool _disposed;
 
-    public TextExtractionService(string tessDataPath = "./tessdata")
+    public TesseractOcrService(string tessDataPath = "./tessdata")
     {
         _tessDataPath = tessDataPath;
     }
 
-    public async Task<ExtractedText> ExtractTextAsync(CapturedImage image, string language = "eng")
+    public async Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, string language = "eng")
     {
         await EnsureEngineInitializedAsync(language);
 
@@ -40,7 +40,7 @@ public class TextExtractionService : ITextExtractionService, IDisposable
             var text = page.GetText();
             var confidence = page.GetMeanConfidence();
 
-            return new ExtractedText
+            return new OcrResult
             {
                 Text = text,
                 Confidence = confidence,

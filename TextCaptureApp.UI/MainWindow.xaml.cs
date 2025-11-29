@@ -13,22 +13,22 @@ namespace TextCaptureApp.UI;
 public partial class MainWindow : Window
 {
     private readonly IScreenCaptureService _screenCaptureService;
-    private readonly ITextExtractionService _textExtractionService;
-    private readonly ITextExportService _textExportService;
+    private readonly IOcrService _ocrService;
+    private readonly ExportServiceResolver _exportServiceResolver;
     private readonly ITtsService _ttsService;
 
-    private CapturedImage? _currentImage;
+    private ImageCaptureResult? _currentImage;
     private string _extractedText = string.Empty;
 
     public MainWindow(
         IScreenCaptureService screenCaptureService,
-        ITextExtractionService textExtractionService,
-        ITextExportService textExportService,
+        IOcrService ocrService,
+        ExportServiceResolver exportServiceResolver,
         ITtsService ttsService)
     {
         _screenCaptureService = screenCaptureService;
-        _textExtractionService = textExtractionService;
-        _textExportService = textExportService;
+        _ocrService = ocrService;
+        _exportServiceResolver = exportServiceResolver;
         _ttsService = ttsService;
 
         InitializeComponent();
@@ -37,7 +37,7 @@ public partial class MainWindow : Window
 
     private async void CheckServicesReady()
     {
-        var ocrReady = await _textExtractionService.IsReadyAsync();
+        var ocrReady = await _ocrService.IsReadyAsync();
         var ttsReady = await _ttsService.IsReadyAsync();
 
         if (!ocrReady)
@@ -104,7 +104,7 @@ public partial class MainWindow : Window
             BtnExtractText.Content = "⏳ Processing...";
 
             var languageCode = GetSelectedLanguageCode();
-            var result = await _textExtractionService.ExtractTextAsync(_currentImage, languageCode);
+            var result = await _ocrService.ExtractTextAsync(_currentImage, languageCode);
 
             _extractedText = result.Text;
             TxtExtracted.Text = _extractedText;
@@ -207,7 +207,9 @@ public partial class MainWindow : Window
                     Author = "Text Capture App"
                 };
 
-                var success = await _textExportService.ExportAsync(_extractedText, options);
+                // Strategy pattern: format'a göre doğru export servisini seç
+                var exportService = _exportServiceResolver(format);
+                var success = await exportService.ExportAsync(_extractedText, options);
 
                 if (success)
                 {

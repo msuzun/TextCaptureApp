@@ -10,16 +10,16 @@ public interface IScreenCaptureService
     /// <summary>
     /// Tüm ekranın görüntüsünü yakalar
     /// </summary>
-    Task<CapturedImage> CaptureFullScreenAsync();
+    Task<ImageCaptureResult> CaptureFullScreenAsync();
 
     /// <summary>
     /// Belirli bir alanın görüntüsünü yakalar
     /// </summary>
-    Task<CapturedImage> CaptureRegionAsync(int x, int y, int width, int height);
+    Task<ImageCaptureResult> CaptureRegionAsync(int x, int y, int width, int height);
 
     /// <summary>
     /// Kullanıcının seçtiği alanı yakalar (interaktif)
     /// </summary>
-    Task<CapturedImage> CaptureSelectedRegionAsync();
+    Task<ImageCaptureResult> CaptureSelectedRegionAsync();
 }
 

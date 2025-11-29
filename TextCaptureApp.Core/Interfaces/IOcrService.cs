@@ -3,14 +3,14 @@ using TextCaptureApp.Core.Models;
 namespace TextCaptureApp.Core.Interfaces;
 
 /// <summary>
-/// OCR tabanlı metin çıkarma servisini tanımlar
+/// OCR (Optical Character Recognition) servisini tanımlar
 /// </summary>
-public interface ITextExtractionService
+public interface IOcrService
 {
     /// <summary>
     /// Görüntüden metin çıkarır
     /// </summary>
-    Task<ExtractedText> ExtractTextAsync(CapturedImage image, string language = "eng");
+    Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, string language = "eng");
 
     /// <summary>
     /// Desteklenen dilleri döndürür

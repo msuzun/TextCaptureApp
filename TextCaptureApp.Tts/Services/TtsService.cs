@@ -2,7 +2,7 @@ using NAudio.Wave;
 using TextCaptureApp.Core.Interfaces;
 using TextCaptureApp.Core.Models;
 
-namespace TextCaptureApp.Tts;
+namespace TextCaptureApp.Tts.Services;
 
 /// <summary>
 /// Text-to-Speech servisi
