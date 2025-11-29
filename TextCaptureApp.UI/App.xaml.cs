@@ -50,12 +50,12 @@ public partial class App : Application
             return new ScreenCaptureService(regionSelector);
         });
 
-        // OCR Service with configuration
+        // OCR Service with configuration - Ekran görüntüleri için özel servis
         services.AddSingleton<IOcrService>(sp =>
         {
             var tessDataPath = ocrConfig["TessDataPath"] ?? "./tessdata";
-            var defaultLanguage = ocrConfig["DefaultLanguage"] ?? "tur+eng";
-            return new TesseractOcrService(tessDataPath, defaultLanguage);
+            var defaultLanguage = ocrConfig["DefaultLanguage"] ?? "eng+tur";
+            return new ScreenOcrService(tessDataPath, defaultLanguage);
         });
 
         // TTS Service with configuration
