@@ -7,6 +7,7 @@ using TextCaptureApp.Ocr.Services;
 using TextCaptureApp.ScreenCapture.Services;
 using TextCaptureApp.Export.Services;
 using TextCaptureApp.Tts.Services;
+using TextCaptureApp.UI.Services;
 
 namespace TextCaptureApp.UI;
 
@@ -29,8 +30,15 @@ public partial class App : Application
 
     private void ConfigureServices(IServiceCollection services)
     {
+        // Register UI services
+        services.AddSingleton<IRegionSelector, WpfRegionSelector>();
+
         // Register core services
-        services.AddSingleton<IScreenCaptureService, ScreenCaptureService>();
+        services.AddSingleton<IScreenCaptureService>(sp =>
+        {
+            var regionSelector = sp.GetService<IRegionSelector>();
+            return new ScreenCaptureService(regionSelector);
+        });
         services.AddSingleton<IOcrService>(sp => new TesseractOcrService("./tessdata"));
         services.AddSingleton<ITtsService, TtsService>();
 
