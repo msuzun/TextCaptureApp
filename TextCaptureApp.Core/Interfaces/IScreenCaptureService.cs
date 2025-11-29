@@ -3,23 +3,23 @@ using TextCaptureApp.Core.Models;
 namespace TextCaptureApp.Core.Interfaces;
 
 /// <summary>
-/// Ekran görüntüsü yakalama servisini tanımlar
+/// Ekran görüntüsü yakalama ve dosya yükleme servisini tanımlar
 /// </summary>
 public interface IScreenCaptureService
 {
     /// <summary>
-    /// Tüm ekranın görüntüsünü yakalar
+    /// Kullanıcının seçtiği ekran bölgesini yakalar
     /// </summary>
-    Task<ImageCaptureResult> CaptureFullScreenAsync();
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yakalanan görüntü veya kullanıcı iptal ettiyse null</returns>
+    Task<ImageCaptureResult?> CaptureRegionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Belirli bir alanın görüntüsünü yakalar
+    /// Dosyadan görüntü yükler
     /// </summary>
-    Task<ImageCaptureResult> CaptureRegionAsync(int x, int y, int width, int height);
-
-    /// <summary>
-    /// Kullanıcının seçtiği alanı yakalar (interaktif)
-    /// </summary>
-    Task<ImageCaptureResult> CaptureSelectedRegionAsync();
+    /// <param name="filePath">Görüntü dosya yolu</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>Yüklenen görüntü veya hata durumunda null</returns>
+    Task<ImageCaptureResult?> CaptureFromFileAsync(string filePath, CancellationToken cancellationToken = default);
 }
 

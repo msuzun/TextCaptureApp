@@ -44,7 +44,7 @@ public partial class App : Application
         {
             var exportServices = sp.GetServices<ITextExportService>();
             return format => exportServices.FirstOrDefault(s => s.IsFormatSupported(format))
-                ?? throw new NotSupportedException($"Export format {format} is not supported");
+                ?? throw new NotSupportedException($"Export format {format} desteklenmiyor");
         });
 
         // Register MainWindow
@@ -73,5 +73,5 @@ public partial class App : Application
 /// <summary>
 /// Export servislerini format'a göre çözümleyen delegate
 /// </summary>
-public delegate ITextExportService ExportServiceResolver(ExportFormat format);
+public delegate ITextExportService ExportServiceResolver(TextExportFormat format);
 

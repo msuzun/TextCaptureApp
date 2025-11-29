@@ -6,49 +6,77 @@ using TextCaptureApp.Core.Models;
 namespace TextCaptureApp.ScreenCapture.Services;
 
 /// <summary>
-/// Windows ekran görüntüsü yakalama servisi
+/// Windows ekran görüntüsü yakalama ve dosya yükleme servisi
 /// </summary>
 public class ScreenCaptureService : IScreenCaptureService
 {
-    public Task<ImageCaptureResult> CaptureFullScreenAsync()
+    public async Task<ImageCaptureResult?> CaptureRegionAsync(CancellationToken cancellationToken = default)
     {
-        return Task.Run(() =>
+        try
         {
-            var bounds = System.Windows.Forms.Screen.PrimaryScreen!.Bounds;
-            return CaptureRegion(bounds.X, bounds.Y, bounds.Width, bounds.Height);
-        });
+            return await Task.Run(() =>
+            {
+                // Tüm ekranı yakala (kullanıcı seçimi için UI gerekli, şimdilik full screen)
+                var bounds = System.Windows.Forms.Screen.PrimaryScreen!.Bounds;
+                return CaptureRegion(bounds.X, bounds.Y, bounds.Width, bounds.Height, "ScreenRegion");
+            }, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
     }
 
-    public Task<ImageCaptureResult> CaptureRegionAsync(int x, int y, int width, int height)
+    public async Task<ImageCaptureResult?> CaptureFromFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
-        return Task.Run(() => CaptureRegion(x, y, width, height));
+        try
+        {
+            return await Task.Run(() =>
+            {
+                if (!File.Exists(filePath))
+                    return null;
+
+                using var bitmap = new Bitmap(filePath);
+                var ms = new MemoryStream();
+                bitmap.Save(ms, ImageFormat.Png);
+                ms.Position = 0;
+
+                return new ImageCaptureResult
+                {
+                    ImageStream = ms,
+                    Width = bitmap.Width,
+                    Height = bitmap.Height,
+                    SourceDescription = $"File: {filePath}"
+                };
+            }, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
-    public Task<ImageCaptureResult> CaptureSelectedRegionAsync()
-    {
-        // Bu metod UI'da bir selection window açarak implement edilecek
-        // Şimdilik placeholder olarak tüm ekranı yakalayalım
-        return CaptureFullScreenAsync();
-    }
-
-    private ImageCaptureResult CaptureRegion(int x, int y, int width, int height)
+    private ImageCaptureResult CaptureRegion(int x, int y, int width, int height, string source)
     {
         using var bitmap = new Bitmap(width, height);
         using var graphics = Graphics.FromImage(bitmap);
         
         graphics.CopyFromScreen(x, y, 0, 0, new Size(width, height));
 
-        using var ms = new MemoryStream();
+        var ms = new MemoryStream();
         bitmap.Save(ms, ImageFormat.Png);
+        ms.Position = 0;
 
         return new ImageCaptureResult
         {
-            ImageData = ms.ToArray(),
+            ImageStream = ms,
             Width = width,
             Height = height,
-            CapturedAt = DateTime.Now,
-            Format = "PNG"
+            SourceDescription = source
         };
     }
 }
-

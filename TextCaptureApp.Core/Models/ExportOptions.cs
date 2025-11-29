@@ -5,14 +5,21 @@ namespace TextCaptureApp.Core.Models;
 /// </summary>
 public class ExportOptions
 {
-    public ExportFormat Format { get; set; }
-    public string FilePath { get; set; } = string.Empty;
-    public bool IncludeTimestamp { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Author { get; set; } = string.Empty;
+    /// <summary>
+    /// Export edilecek dosya yolu
+    /// </summary>
+    public required string OutputPath { get; set; }
+
+    /// <summary>
+    /// Export formatı
+    /// </summary>
+    public TextExportFormat Format { get; set; }
 }
 
-public enum ExportFormat
+/// <summary>
+/// Metin export formatları
+/// </summary>
+public enum TextExportFormat
 {
     Txt,
     Pdf,

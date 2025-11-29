@@ -1,5 +1,4 @@
 using System.Drawing;
-using System.Drawing.Imaging;
 using Tesseract;
 using TextCaptureApp.Core.Interfaces;
 using TextCaptureApp.Core.Models;
@@ -12,22 +11,25 @@ namespace TextCaptureApp.Ocr.Services;
 public class TesseractOcrService : IOcrService, IDisposable
 {
     private readonly string _tessDataPath;
+    private readonly string _defaultLanguage;
     private TesseractEngine? _engine;
     private bool _disposed;
 
-    public TesseractOcrService(string tessDataPath = "./tessdata")
+    public TesseractOcrService(string tessDataPath = "./tessdata", string defaultLanguage = "eng")
     {
         _tessDataPath = tessDataPath;
+        _defaultLanguage = defaultLanguage;
     }
 
-    public async Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, string language = "eng")
+    public async Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, CancellationToken cancellationToken = default)
     {
-        await EnsureEngineInitializedAsync(language);
+        await EnsureEngineInitializedAsync(cancellationToken);
 
         return await Task.Run(() =>
         {
-            using var ms = new MemoryStream(image.ImageData);
-            using var bitmap = new Bitmap(ms);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            using var bitmap = new Bitmap(image.ImageStream);
             
             // Save bitmap temporarily and load as Pix
             using var tempMs = new MemoryStream();
@@ -44,51 +46,30 @@ public class TesseractOcrService : IOcrService, IDisposable
             {
                 Text = text,
                 Confidence = confidence,
-                Language = language,
-                ExtractedAt = DateTime.Now,
-                SourceImage = image
+                Language = _defaultLanguage
             };
-        });
+        }, cancellationToken);
     }
 
-    public Task<IEnumerable<string>> GetSupportedLanguagesAsync()
-    {
-        // Tesseract desteklenen diller: eng, tur, deu, fra, spa vb.
-        // tessdata klasöründe bulunan .traineddata dosyalarına göre
-        var languages = new[] { "eng", "tur", "deu", "fra", "spa", "ita" };
-        return Task.FromResult<IEnumerable<string>>(languages);
-    }
-
-    public Task<bool> IsReadyAsync()
-    {
-        try
-        {
-            // tessdata klasörünün var olup olmadığını kontrol et
-            return Task.FromResult(Directory.Exists(_tessDataPath));
-        }
-        catch
-        {
-            return Task.FromResult(false);
-        }
-    }
-
-    private async Task EnsureEngineInitializedAsync(string language)
+    private async Task EnsureEngineInitializedAsync(CancellationToken cancellationToken)
     {
         if (_engine != null) return;
 
         await Task.Run(() =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
-                _engine = new TesseractEngine(_tessDataPath, language, EngineMode.Default);
+                _engine = new TesseractEngine(_tessDataPath, _defaultLanguage, EngineMode.Default);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"Tesseract engine başlatılamadı. tessdata klasörünün '{_tessDataPath}' yolunda ve '{language}.traineddata' dosyasının mevcut olduğundan emin olun.", 
+                    $"Tesseract engine başlatılamadı. tessdata klasörünün '{_tessDataPath}' yolunda ve '{_defaultLanguage}.traineddata' dosyasının mevcut olduğundan emin olun.", 
                     ex);
             }
-        });
+        }, cancellationToken);
     }
 
     public void Dispose()
@@ -100,4 +81,3 @@ public class TesseractOcrService : IOcrService, IDisposable
         GC.SuppressFinalize(this);
     }
 }
-

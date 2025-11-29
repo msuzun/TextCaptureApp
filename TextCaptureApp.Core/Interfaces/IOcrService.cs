@@ -10,16 +10,9 @@ public interface IOcrService
     /// <summary>
     /// Görüntüden metin çıkarır
     /// </summary>
-    Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, string language = "eng");
-
-    /// <summary>
-    /// Desteklenen dilleri döndürür
-    /// </summary>
-    Task<IEnumerable<string>> GetSupportedLanguagesAsync();
-
-    /// <summary>
-    /// OCR engine'inin hazır olup olmadığını kontrol eder
-    /// </summary>
-    Task<bool> IsReadyAsync();
+    /// <param name="image">İşlenecek görüntü</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <returns>OCR sonucu</returns>
+    Task<OcrResult> ExtractTextAsync(ImageCaptureResult image, CancellationToken cancellationToken = default);
 }
 

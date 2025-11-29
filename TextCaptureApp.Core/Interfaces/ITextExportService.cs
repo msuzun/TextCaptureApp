@@ -10,16 +10,15 @@ public interface ITextExportService
     /// <summary>
     /// Metni belirtilen formatta export eder
     /// </summary>
-    Task<bool> ExportAsync(string text, ExportOptions options);
+    /// <param name="text">Export edilecek metin</param>
+    /// <param name="options">Export seçenekleri</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <exception cref="InvalidOperationException">Export başarısız olursa</exception>
+    Task ExportAsync(string text, ExportOptions options, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Export formatının desteklenip desteklenmediğini kontrol eder
+    /// Export formatının bu servis tarafından desteklenip desteklenmediğini kontrol eder
     /// </summary>
-    bool IsFormatSupported(ExportFormat format);
-
-    /// <summary>
-    /// Dosya kaydetmek için geçerli bir path olup olmadığını doğrular
-    /// </summary>
-    bool ValidateFilePath(string filePath, ExportFormat format);
+    bool IsFormatSupported(TextExportFormat format);
 }
 

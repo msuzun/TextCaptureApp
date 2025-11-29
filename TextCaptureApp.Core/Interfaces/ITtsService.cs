@@ -1,5 +1,3 @@
-using TextCaptureApp.Core.Models;
-
 namespace TextCaptureApp.Core.Interfaces;
 
 /// <summary>
@@ -8,18 +6,12 @@ namespace TextCaptureApp.Core.Interfaces;
 public interface ITtsService
 {
     /// <summary>
-    /// Metni sese dönüştürür ve dosyaya kaydeder
+    /// Metni sese dönüştürür ve belirtilen dosyaya kaydeder
     /// </summary>
-    Task<bool> ConvertTextToSpeechAsync(string text, TtsOptions options);
-
-    /// <summary>
-    /// Kullanılabilir sesleri döndürür
-    /// </summary>
-    Task<IEnumerable<string>> GetAvailableVoicesAsync();
-
-    /// <summary>
-    /// TTS servisinin hazır olup olmadığını kontrol eder
-    /// </summary>
-    Task<bool> IsReadyAsync();
+    /// <param name="text">Sese dönüştürülecek metin</param>
+    /// <param name="outputPath">Ses dosyası kayıt yolu</param>
+    /// <param name="cancellationToken">İptal token'ı</param>
+    /// <exception cref="InvalidOperationException">TTS başarısız olursa</exception>
+    Task GenerateAudioAsync(string text, string outputPath, CancellationToken cancellationToken = default);
 }
 

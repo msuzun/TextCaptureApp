@@ -19,6 +19,7 @@ public partial class MainWindow : Window
 
     private ImageCaptureResult? _currentImage;
     private string _extractedText = string.Empty;
+    private CancellationTokenSource? _cts;
 
     public MainWindow(
         IScreenCaptureService screenCaptureService,
@@ -32,65 +33,71 @@ public partial class MainWindow : Window
         _ttsService = ttsService;
 
         InitializeComponent();
-        CheckServicesReady();
-    }
-
-    private async void CheckServicesReady()
-    {
-        var ocrReady = await _ocrService.IsReadyAsync();
-        var ttsReady = await _ttsService.IsReadyAsync();
-
-        if (!ocrReady)
-        {
-            MessageBox.Show("OCR servisi hazır değil. 'tessdata' klasörünü ve dil dosyalarını kontrol edin.",
-                "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-
-        if (!ttsReady)
-        {
-            MessageBox.Show("TTS servisi hazır değil. Sisteminizde TTS voice'ları kurulu olmayabilir.",
-                "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
     }
 
     private async void BtnCaptureScreen_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            // Minimize window for clean capture
             WindowState = WindowState.Minimized;
             await Task.Delay(300);
 
-            _currentImage = await _screenCaptureService.CaptureFullScreenAsync();
-            DisplayCapturedImage();
+            _cts = new CancellationTokenSource();
+            _currentImage?.Dispose();
+            _currentImage = await _screenCaptureService.CaptureRegionAsync(_cts.Token);
+
+            if (_currentImage != null)
+            {
+                DisplayCapturedImage();
+                BtnExtractText.IsEnabled = true;
+            }
 
             WindowState = WindowState.Normal;
-            BtnExtractText.IsEnabled = true;
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Ekran görüntüsü alınamadı: {ex.Message}", "Hata", 
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
+        finally
+        {
+            _cts?.Dispose();
+            _cts = null;
+        }
     }
 
     private async void BtnCaptureRegion_Click(object sender, RoutedEventArgs e)
     {
-        try
+        var dialog = new OpenFileDialog
         {
-            WindowState = WindowState.Minimized;
-            await Task.Delay(300);
+            Filter = "Image Files (*.png;*.jpg;*.jpeg;*.bmp)|*.png;*.jpg;*.jpeg;*.bmp",
+            Title = "Görüntü Dosyası Seç"
+        };
 
-            _currentImage = await _screenCaptureService.CaptureSelectedRegionAsync();
-            DisplayCapturedImage();
-
-            WindowState = WindowState.Normal;
-            BtnExtractText.IsEnabled = true;
-        }
-        catch (Exception ex)
+        if (dialog.ShowDialog() == true)
         {
-            MessageBox.Show($"Bölge yakalanamadı: {ex.Message}", "Hata",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            try
+            {
+                _cts = new CancellationTokenSource();
+                _currentImage?.Dispose();
+                _currentImage = await _screenCaptureService.CaptureFromFileAsync(dialog.FileName, _cts.Token);
+
+                if (_currentImage != null)
+                {
+                    DisplayCapturedImage();
+                    BtnExtractText.IsEnabled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Dosya yüklenemedi: {ex.Message}", "Hata",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _cts?.Dispose();
+                _cts = null;
+            }
         }
     }
 
@@ -103,14 +110,25 @@ public partial class MainWindow : Window
             BtnExtractText.IsEnabled = false;
             BtnExtractText.Content = "⏳ Processing...";
 
-            var languageCode = GetSelectedLanguageCode();
-            var result = await _ocrService.ExtractTextAsync(_currentImage, languageCode);
+            _cts = new CancellationTokenSource();
+            
+            // Stream'i başa sar (multiple reads için)
+            _currentImage.ImageStream.Position = 0;
+            
+            var result = await _ocrService.ExtractTextAsync(_currentImage, _cts.Token);
 
             _extractedText = result.Text;
             TxtExtracted.Text = _extractedText;
-            TxtConfidence.Text = $"Confidence: {result.Confidence:P1}";
+            TxtConfidence.Text = result.Confidence.HasValue 
+                ? $"Confidence: {result.Confidence.Value:P1}" 
+                : string.Empty;
 
             EnableExportButtons();
+        }
+        catch (OperationCanceledException)
+        {
+            MessageBox.Show("OCR işlemi iptal edildi.", "İptal",
+                MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -121,22 +139,24 @@ public partial class MainWindow : Window
         {
             BtnExtractText.IsEnabled = true;
             BtnExtractText.Content = "🔍 Extract Text (OCR)";
+            _cts?.Dispose();
+            _cts = null;
         }
     }
 
     private async void BtnExportTxt_Click(object sender, RoutedEventArgs e)
     {
-        await ExportText(ExportFormat.Txt, "Text Files (*.txt)|*.txt");
+        await ExportText(TextExportFormat.Txt, "Text Files (*.txt)|*.txt");
     }
 
     private async void BtnExportPdf_Click(object sender, RoutedEventArgs e)
     {
-        await ExportText(ExportFormat.Pdf, "PDF Files (*.pdf)|*.pdf");
+        await ExportText(TextExportFormat.Pdf, "PDF Files (*.pdf)|*.pdf");
     }
 
     private async void BtnExportDocx_Click(object sender, RoutedEventArgs e)
     {
-        await ExportText(ExportFormat.Docx, "Word Documents (*.docx)|*.docx");
+        await ExportText(TextExportFormat.Docx, "Word Documents (*.docx)|*.docx");
     }
 
     private async void BtnGenerateTts_Click(object sender, RoutedEventArgs e)
@@ -154,36 +174,31 @@ public partial class MainWindow : Window
         {
             try
             {
-                var options = new TtsOptions
-                {
-                    OutputPath = dialog.FileName,
-                    Speed = 0,
-                    Volume = 100,
-                    Format = AudioFormat.Wav
-                };
+                _cts = new CancellationTokenSource();
+                await _ttsService.GenerateAudioAsync(_extractedText, dialog.FileName, _cts.Token);
 
-                var success = await _ttsService.ConvertTextToSpeechAsync(_extractedText, options);
-
-                if (success)
-                {
-                    MessageBox.Show("Ses dosyası başarıyla oluşturuldu!", "Başarılı",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Ses dosyası oluşturulamadı.", "Hata",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                MessageBox.Show("Ses dosyası başarıyla oluşturuldu!", "Başarılı",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("TTS işlemi iptal edildi.", "İptal",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"TTS hatası: {ex.Message}", "Hata",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            finally
+            {
+                _cts?.Dispose();
+                _cts = null;
+            }
         }
     }
 
-    private async Task ExportText(ExportFormat format, string filter)
+    private async Task ExportText(TextExportFormat format, string filter)
     {
         if (string.IsNullOrWhiteSpace(_extractedText)) return;
 
@@ -201,31 +216,30 @@ public partial class MainWindow : Window
                 var options = new ExportOptions
                 {
                     Format = format,
-                    FilePath = dialog.FileName,
-                    IncludeTimestamp = true,
-                    Title = "OCR Extracted Text",
-                    Author = "Text Capture App"
+                    OutputPath = dialog.FileName
                 };
 
-                // Strategy pattern: format'a göre doğru export servisini seç
+                _cts = new CancellationTokenSource();
                 var exportService = _exportServiceResolver(format);
-                var success = await exportService.ExportAsync(_extractedText, options);
+                await exportService.ExportAsync(_extractedText, options, _cts.Token);
 
-                if (success)
-                {
-                    MessageBox.Show("Dosya başarıyla kaydedildi!", "Başarılı",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Dosya kaydedilemedi.", "Hata",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                MessageBox.Show("Dosya başarıyla kaydedildi!", "Başarılı",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show("Export işlemi iptal edildi.", "İptal",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Export hatası: {ex.Message}", "Hata",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _cts?.Dispose();
+                _cts = null;
             }
         }
     }
@@ -234,14 +248,13 @@ public partial class MainWindow : Window
     {
         if (_currentImage == null) return;
 
+        _currentImage.ImageStream.Position = 0;
+        
         var bitmap = new BitmapImage();
-        using (var ms = new MemoryStream(_currentImage.ImageData))
-        {
-            bitmap.BeginInit();
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.StreamSource = ms;
-            bitmap.EndInit();
-        }
+        bitmap.BeginInit();
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.StreamSource = _currentImage.ImageStream;
+        bitmap.EndInit();
 
         ImgCaptured.Source = bitmap;
     }
@@ -254,16 +267,11 @@ public partial class MainWindow : Window
         BtnGenerateTts.IsEnabled = true;
     }
 
-    private string GetSelectedLanguageCode()
+    protected override void OnClosed(EventArgs e)
     {
-        return CmbLanguage.SelectedIndex switch
-        {
-            0 => "eng",
-            1 => "tur",
-            2 => "deu",
-            3 => "fra",
-            4 => "spa",
-            _ => "eng"
-        };
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _currentImage?.Dispose();
+        base.OnClosed(e);
     }
 }

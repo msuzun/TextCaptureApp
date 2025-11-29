@@ -11,13 +11,15 @@ namespace TextCaptureApp.Export.Services;
 /// </summary>
 public class DocxExportService : ITextExportService
 {
-    public Task<bool> ExportAsync(string text, ExportOptions options)
+    public Task ExportAsync(string text, ExportOptions options, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
         {
             try
             {
-                using var wordDocument = WordprocessingDocument.Create(options.FilePath, WordprocessingDocumentType.Document);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                using var wordDocument = WordprocessingDocument.Create(options.OutputPath, WordprocessingDocumentType.Document);
                 
                 var mainPart = wordDocument.AddMainDocumentPart();
                 mainPart.Document = new Document();
@@ -27,40 +29,28 @@ public class DocxExportService : ITextExportService
                 var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 foreach (var line in lines)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     var para = body.AppendChild(new Paragraph());
                     var run = para.AppendChild(new Run());
                     run.AppendChild(new Text(line));
                 }
 
-                // Timestamp
-                if (options.IncludeTimestamp)
-                {
-                    var timestampPara = body.AppendChild(new Paragraph());
-                    var timestampRun = timestampPara.AppendChild(new Run());
-                    timestampRun.AppendChild(new Text($"\nOluşturulma: {DateTime.Now:dd.MM.yyyy HH:mm:ss}"));
-                }
-
                 mainPart.Document.Save();
-                return true;
             }
-            catch
+            catch (OperationCanceledException)
             {
-                return false;
+                throw;
             }
-        });
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"DOCX export başarısız: {ex.Message}", ex);
+            }
+        }, cancellationToken);
     }
 
-    public bool IsFormatSupported(ExportFormat format)
+    public bool IsFormatSupported(TextExportFormat format)
     {
-        return format == ExportFormat.Docx;
-    }
-
-    public bool ValidateFilePath(string filePath, ExportFormat format)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            return false;
-
-        return filePath.EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
+        return format == TextExportFormat.Docx;
     }
 }
-

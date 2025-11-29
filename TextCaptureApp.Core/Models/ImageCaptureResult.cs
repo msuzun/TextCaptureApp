@@ -1,14 +1,39 @@
 namespace TextCaptureApp.Core.Models;
 
 /// <summary>
-/// Yakalanan ekran görüntüsünü temsil eder
+/// Yakalanan görüntüyü temsil eder
 /// </summary>
-public class ImageCaptureResult
+public class ImageCaptureResult : IDisposable
 {
-    public byte[] ImageData { get; set; } = Array.Empty<byte>();
+    /// <summary>
+    /// Görüntü verisi (stream-based, memory efficient)
+    /// </summary>
+    public required Stream ImageStream { get; set; }
+
+    /// <summary>
+    /// Görüntü genişliği
+    /// </summary>
     public int Width { get; set; }
+
+    /// <summary>
+    /// Görüntü yüksekliği
+    /// </summary>
     public int Height { get; set; }
-    public DateTime CapturedAt { get; set; }
-    public string Format { get; set; } = "PNG";
+
+    /// <summary>
+    /// Kaynak açıklaması (örn: 'ScreenRegion', 'File: c:\image.png')
+    /// </summary>
+    public string? SourceDescription { get; set; }
+
+    private bool _disposed;
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        
+        ImageStream?.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }
 }
 

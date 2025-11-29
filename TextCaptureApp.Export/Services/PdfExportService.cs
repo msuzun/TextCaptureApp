@@ -10,25 +10,21 @@ namespace TextCaptureApp.Export.Services;
 /// </summary>
 public class PdfExportService : ITextExportService
 {
-    public Task<bool> ExportAsync(string text, ExportOptions options)
+    public Task ExportAsync(string text, ExportOptions options, CancellationToken cancellationToken = default)
     {
         return Task.Run(() =>
         {
             try
             {
-                using var fs = new FileStream(options.FilePath, FileMode.Create);
+                cancellationToken.ThrowIfCancellationRequested();
+
+                using var fs = new FileStream(options.OutputPath, FileMode.Create);
                 var document = new Document(PageSize.A4, 50, 50, 50, 50);
                 PdfWriter.GetInstance(document, fs);
 
                 document.Open();
 
-                // Metadata
-                if (!string.IsNullOrWhiteSpace(options.Title))
-                    document.AddTitle(options.Title);
-                if (!string.IsNullOrWhiteSpace(options.Author))
-                    document.AddAuthor(options.Author);
-
-                // Font ayarı (Unicode desteği için)
+                // Font ayarı
                 var baseFont = BaseFont.CreateFont(
                     BaseFont.HELVETICA, 
                     BaseFont.CP1252, 
@@ -39,34 +35,21 @@ public class PdfExportService : ITextExportService
                 var paragraph = new Paragraph(text, font);
                 document.Add(paragraph);
 
-                if (options.IncludeTimestamp)
-                {
-                    var timestamp = new Paragraph($"\n\nOluşturulma: {DateTime.Now:dd.MM.yyyy HH:mm:ss}", 
-                        new Font(baseFont, 8, Font.ITALIC));
-                    document.Add(timestamp);
-                }
-
                 document.Close();
-                return true;
             }
-            catch
+            catch (OperationCanceledException)
             {
-                return false;
+                throw;
             }
-        });
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"PDF export başarısız: {ex.Message}", ex);
+            }
+        }, cancellationToken);
     }
 
-    public bool IsFormatSupported(ExportFormat format)
+    public bool IsFormatSupported(TextExportFormat format)
     {
-        return format == ExportFormat.Pdf;
-    }
-
-    public bool ValidateFilePath(string filePath, ExportFormat format)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            return false;
-
-        return filePath.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+        return format == TextExportFormat.Pdf;
     }
 }
-

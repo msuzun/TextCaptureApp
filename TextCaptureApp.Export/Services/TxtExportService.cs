@@ -9,30 +9,24 @@ namespace TextCaptureApp.Export.Services;
 /// </summary>
 public class TxtExportService : ITextExportService
 {
-    public async Task<bool> ExportAsync(string text, ExportOptions options)
+    public async Task ExportAsync(string text, ExportOptions options, CancellationToken cancellationToken = default)
     {
         try
         {
-            await File.WriteAllTextAsync(options.FilePath, text, Encoding.UTF8);
-            return true;
+            await File.WriteAllTextAsync(options.OutputPath, text, Encoding.UTF8, cancellationToken);
         }
-        catch
+        catch (OperationCanceledException)
         {
-            return false;
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"TXT export başarısız: {ex.Message}", ex);
         }
     }
 
-    public bool IsFormatSupported(ExportFormat format)
+    public bool IsFormatSupported(TextExportFormat format)
     {
-        return format == ExportFormat.Txt;
-    }
-
-    public bool ValidateFilePath(string filePath, ExportFormat format)
-    {
-        if (string.IsNullOrWhiteSpace(filePath))
-            return false;
-
-        return filePath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase);
+        return format == TextExportFormat.Txt;
     }
 }
-

@@ -5,10 +5,19 @@ namespace TextCaptureApp.Core.Models;
 /// </summary>
 public class OcrResult
 {
-    public string Text { get; set; } = string.Empty;
-    public double Confidence { get; set; }
-    public string Language { get; set; } = "eng";
-    public DateTime ExtractedAt { get; set; }
-    public ImageCaptureResult? SourceImage { get; set; }
+    /// <summary>
+    /// Çıkarılan metin
+    /// </summary>
+    public required string Text { get; set; }
+
+    /// <summary>
+    /// OCR güven skoru (0.0 - 1.0 arası, opsiyonel)
+    /// </summary>
+    public double? Confidence { get; set; }
+
+    /// <summary>
+    /// Tespit edilen veya kullanılan dil kodu (örn: 'eng', 'tur')
+    /// </summary>
+    public string? Language { get; set; }
 }
 
