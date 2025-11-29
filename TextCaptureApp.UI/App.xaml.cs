@@ -8,6 +8,7 @@ using TextCaptureApp.ScreenCapture.Services;
 using TextCaptureApp.Export.Services;
 using TextCaptureApp.Tts.Services;
 using TextCaptureApp.UI.Services;
+using TextCaptureApp.UI.ViewModels;
 
 namespace TextCaptureApp.UI;
 
@@ -69,6 +70,9 @@ public partial class App : Application
         // Register composite export service
         services.AddSingleton<ITextExportService, CompositeTextExportService>();
 
+        // Register ViewModels
+        services.AddTransient<MainWindowViewModel>();
+
         // Register MainWindow
         services.AddTransient<MainWindow>();
     }
@@ -77,6 +81,8 @@ public partial class App : Application
     {
         await _host.StartAsync();
 
+        // Resolve ViewModel and MainWindow from DI
+        var viewModel = _host.Services.GetRequiredService<MainWindowViewModel>();
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
 
