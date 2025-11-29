@@ -41,7 +41,7 @@ public partial class App : Application
         });
         services.AddSingleton<IOcrService>(sp => 
             new TesseractOcrService(tessDataPath: "./tessdata", defaultLanguage: "tur+eng"));
-        services.AddSingleton<ITtsService, TtsService>();
+        services.AddSingleton<ITtsService, BasicTtsService>();
 
         // Register composite export service
         services.AddSingleton<ITextExportService, CompositeTextExportService>();
