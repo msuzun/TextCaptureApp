@@ -43,18 +43,8 @@ public partial class App : Application
             new TesseractOcrService(tessDataPath: "./tessdata", defaultLanguage: "tur+eng"));
         services.AddSingleton<ITtsService, TtsService>();
 
-        // Register export services (Strategy pattern)
-        services.AddSingleton<ITextExportService, TxtExportService>();
-        services.AddSingleton<ITextExportService, PdfExportService>();
-        services.AddSingleton<ITextExportService, DocxExportService>();
-
-        // Register export service factory/resolver
-        services.AddSingleton<ExportServiceResolver>(sp =>
-        {
-            var exportServices = sp.GetServices<ITextExportService>();
-            return format => exportServices.FirstOrDefault(s => s.IsFormatSupported(format))
-                ?? throw new NotSupportedException($"Export format {format} desteklenmiyor");
-        });
+        // Register composite export service
+        services.AddSingleton<ITextExportService, CompositeTextExportService>();
 
         // Register MainWindow
         services.AddTransient<MainWindow>();
@@ -78,9 +68,4 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
-
-/// <summary>
-/// Export servislerini format'a göre çözümleyen delegate
-/// </summary>
-public delegate ITextExportService ExportServiceResolver(TextExportFormat format);
 

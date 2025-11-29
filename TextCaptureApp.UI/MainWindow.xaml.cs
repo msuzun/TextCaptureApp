@@ -14,7 +14,7 @@ public partial class MainWindow : Window
 {
     private readonly IScreenCaptureService _screenCaptureService;
     private readonly IOcrService _ocrService;
-    private readonly ExportServiceResolver _exportServiceResolver;
+    private readonly ITextExportService _textExportService;
     private readonly ITtsService _ttsService;
 
     private ImageCaptureResult? _currentImage;
@@ -24,12 +24,12 @@ public partial class MainWindow : Window
     public MainWindow(
         IScreenCaptureService screenCaptureService,
         IOcrService ocrService,
-        ExportServiceResolver exportServiceResolver,
+        ITextExportService textExportService,
         ITtsService ttsService)
     {
         _screenCaptureService = screenCaptureService;
         _ocrService = ocrService;
-        _exportServiceResolver = exportServiceResolver;
+        _textExportService = textExportService;
         _ttsService = ttsService;
 
         InitializeComponent();
@@ -220,8 +220,7 @@ public partial class MainWindow : Window
                 };
 
                 _cts = new CancellationTokenSource();
-                var exportService = _exportServiceResolver(format);
-                await exportService.ExportAsync(_extractedText, options, _cts.Token);
+                await _textExportService.ExportAsync(_extractedText, options, _cts.Token);
 
                 MessageBox.Show("Dosya başarıyla kaydedildi!", "Başarılı",
                     MessageBoxButton.OK, MessageBoxImage.Information);
