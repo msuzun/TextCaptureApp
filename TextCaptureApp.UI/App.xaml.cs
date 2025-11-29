@@ -39,7 +39,8 @@ public partial class App : Application
             var regionSelector = sp.GetService<IRegionSelector>();
             return new ScreenCaptureService(regionSelector);
         });
-        services.AddSingleton<IOcrService>(sp => new TesseractOcrService("./tessdata"));
+        services.AddSingleton<IOcrService>(sp => 
+            new TesseractOcrService(tessDataPath: "./tessdata", defaultLanguage: "tur+eng"));
         services.AddSingleton<ITtsService, TtsService>();
 
         // Register export services (Strategy pattern)
