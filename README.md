@@ -1,76 +1,76 @@
 # Text Capture App - OCR and Export
 
-Modern, modüler ve SOLID prensiplere uygun .NET 8 WPF masaüstü uygulaması.
+Modern, modular .NET 8 WPF desktop application following SOLID principles.
 
-## 🎯 Özellikler
+## 🎯 Features
 
-- **📷 Ekran Görüntüsü Yakalama**: Tam ekran veya bölge seçerek görüntü yakala
-- **🔍 OCR (Optik Karakter Tanıma)**: Tesseract OCR ile çok dilli metin çıkarma
-- **💾 Çoklu Format Export**: TXT, PDF, DOCX formatlarında kaydetme
-- **🔊 Text-to-Speech**: Metni sese dönüştürme (WAV formatı)
+- **📷 Screen Capture**: Capture full screen or select a region
+- **🔍 OCR (Optical Character Recognition)**: Multi-language text extraction using Tesseract OCR
+- **💾 Multi-Format Export**: Save in TXT, PDF, DOCX formats
+- **🔊 Text-to-Speech**: Convert text to speech (WAV format)
 
-## 🏗️ Mimari
+## 🏗️ Architecture
 
-Proje katmanlı, modüler bir mimariye sahiptir ve her katman ayrı bir class library olarak tasarlanmıştır:
+The project has a layered, modular architecture where each layer is designed as a separate class library:
 
-### Projeler
+### Projects
 
 ```
 TextCaptureApp/
-├── TextCaptureApp.Core          # Interface'ler, DTO'lar, modeller
-├── TextCaptureApp.ScreenCapture # Ekran görüntüsü alma servisi
-├── TextCaptureApp.Ocr           # OCR servisi (Tesseract)
-├── TextCaptureApp.Export        # Export servisleri (PDF, DOCX, TXT)
-├── TextCaptureApp.Tts           # Text-to-Speech servisi
-└── TextCaptureApp.UI            # WPF Kullanıcı Arayüzü
+├── TextCaptureApp.Core          # Interfaces, DTOs, models
+├── TextCaptureApp.ScreenCapture # Screen capture service
+├── TextCaptureApp.Ocr           # OCR service (Tesseract)
+├── TextCaptureApp.Export        # Export services (PDF, DOCX, TXT)
+├── TextCaptureApp.Tts           # Text-to-Speech service
+└── TextCaptureApp.UI            # WPF User Interface
 ```
 
-### Bağımlılıklar
+### Dependencies
 
 - **UI** → Core, Ocr, ScreenCapture, Export, Tts
 - **Ocr, ScreenCapture, Export, Tts** → Core
-- **Core** → Hiçbir şeye bağımlı değil
+- **Core** → No dependencies
 
-### Teknolojiler
+### Technologies
 
 - **.NET 8** (Windows)
 - **WPF** (Windows Presentation Foundation)
 - **Dependency Injection** (Microsoft.Extensions.Hosting)
-- **Tesseract OCR** - Metin tanıma
+- **Tesseract OCR** - Text recognition
 - **iTextSharp** - PDF export
 - **DocumentFormat.OpenXml** - DOCX export
-- **NAudio** - Ses dosyası işleme
+- **NAudio** - Audio file processing
 
-## 📋 Gereksinimler
+## 📋 Requirements
 
-- .NET 8 SDK veya üzeri
+- .NET 8 SDK or higher
 - Windows 10/11
-- Tesseract dil dosyaları (tessdata klasörü)
+- Tesseract language data files (tessdata folder)
 
-## 🚀 Kurulum
+## 🚀 Installation
 
-### 1. Projeyi Klonlayın
+### 1. Clone the Project
 
 ```bash
 git clone <repository-url>
 cd app89
 ```
 
-### 2. Tesseract Dil Dosyalarını İndirin
+### 2. Download Tesseract Language Data Files
 
-OCR özelliğinin çalışması için Tesseract dil dosyalarına ihtiyacınız var:
+You need Tesseract language data files for the OCR feature to work:
 
-1. Proje kök dizininde `tessdata` klasörü oluşturun
-2. [Tesseract Language Data](https://github.com/tesseract-ocr/tessdata) deposundan dil dosyalarını indirin:
-   - İngilizce: `eng.traineddata`
-   - Türkçe: `tur.traineddata`
-   - Almanca: `deu.traineddata`
-   - Fransızca: `fra.traineddata`
-   - İspanyolca: `spa.traineddata`
+1. Create a `tessdata` folder in the project root directory
+2. Download language data files from the [Tesseract Language Data](https://github.com/tesseract-ocr/tessdata) repository:
+   - English: `eng.traineddata`
+   - Turkish: `tur.traineddata`
+   - German: `deu.traineddata`
+   - French: `fra.traineddata`
+   - Spanish: `spa.traineddata`
 
-3. İndirilen `.traineddata` dosyalarını `tessdata` klasörüne koyun
+3. Place the downloaded `.traineddata` files in the `tessdata` folder
 
-Klasör yapısı:
+Folder structure:
 ```
 app89/
 ├── tessdata/
@@ -81,95 +81,94 @@ app89/
 └── ...
 ```
 
-### 3. Build ve Çalıştır
+### 3. Build and Run
 
 ```bash
 dotnet build
 dotnet run --project TextCaptureApp.UI
 ```
 
-## 💡 Kullanım
+## 💡 Usage
 
-1. **Ekran Görüntüsü Al**
-   - "📷 Capture Screen" - Tüm ekranı yakalar
-   - "🖼️ Capture Region" - Seçili bölgeyi yakalar
+1. **Capture Screen**
+   - "📷 Capture Screen" - Captures the entire screen
+   - "🖼️ Capture Region" - Captures the selected region
 
-2. **Metin Çıkar**
-   - Dil seçin (İngilizce, Türkçe, vb.)
-   - "🔍 Extract Text (OCR)" butonuna tıklayın
-   - Çıkarılan metin sağ panelde görünür
+2. **Extract Text**
+   - Select a language (English, Turkish, etc.)
+   - Click the "🔍 Extract Text (OCR)" button
+   - Extracted text appears in the right panel
 
-3. **Export Et**
-   - "💾 Export TXT" - Düz metin olarak kaydet
-   - "📄 Export PDF" - PDF belgesi oluştur
-   - "📝 Export DOCX" - Word belgesi oluştur
+3. **Export**
+   - "💾 Export TXT" - Save as plain text
+   - "📄 Export PDF" - Create PDF document
+   - "📝 Export DOCX" - Create Word document
 
-4. **Sese Çevir**
-   - "🔊 Generate Speech" - WAV ses dosyası oluştur
+4. **Convert to Speech**
+   - "🔊 Generate Speech" - Create WAV audio file
 
-## 🔧 Geliştirme Prensipleri
+## 🔧 Development Principles
 
-Bu proje aşağıdaki yazılım geliştirme prensiplerine sıkı sıkıya uygundur:
+This project strictly adheres to the following software development principles:
 
-### SOLID Prensipleri
+### SOLID Principles
 
-- ✅ **Single Responsibility**: Her sınıf tek bir sorumluluğa sahip
-- ✅ **Open/Closed**: Genişlemeye açık, değişikliğe kapalı
-- ✅ **Liskov Substitution**: Interface'ler doğru implement edilmiş
-- ✅ **Interface Segregation**: Küçük, özelleşmiş interface'ler
-- ✅ **Dependency Inversion**: Bağımlılıklar interface'ler üzerinden
+- ✅ **Single Responsibility**: Each class has a single responsibility
+- ✅ **Open/Closed**: Open for extension, closed for modification
+- ✅ **Liskov Substitution**: Interfaces are properly implemented
+- ✅ **Interface Segregation**: Small, specialized interfaces
+- ✅ **Dependency Inversion**: Dependencies through interfaces
 
-### Diğer Prensipler
+### Other Principles
 
-- ✅ **Separation of Concerns**: Katmanlar birbirinden bağımsız
-- ✅ **Dependency Injection**: Constructor injection kullanımı
-- ✅ **No Static Code**: Tüm servisler instance-based
-- ✅ **No God Objects**: Tek bir sınıfta aşırı sorumluluk yok
-- ✅ **Testability**: Unit test edilebilir yapı
+- ✅ **Separation of Concerns**: Layers are independent from each other
+- ✅ **Dependency Injection**: Constructor injection usage
+- ✅ **No Static Code**: All services are instance-based
+- ✅ **No God Objects**: No excessive responsibility in a single class
+- ✅ **Testability**: Unit testable structure
 
-## 🧪 Test
+## 🧪 Testing
 
-Servislerin unit test'leri için:
+For unit tests of services:
 
 ```bash
-# Test projeleri eklenebilir
+# Test projects can be added
 dotnet test
 ```
 
-## 📝 Notlar
+## 📝 Notes
 
-### TTS (Text-to-Speech) Hakkında
+### About TTS (Text-to-Speech)
 
-Mevcut TTS implementasyonu basit bir placeholder'dır ve sessiz WAV dosyası üretir. 
-Gerçek TTS için aşağıdaki seçeneklerden biri kullanılabilir:
+The current TTS implementation is a simple placeholder and produces a silent WAV file. 
+For real TTS, one of the following options can be used:
 
 - **Azure Cognitive Services Speech SDK**
 - **Google Cloud Text-to-Speech**
-- **Windows SAPI (System.Speech)** - Sadece Windows
+- **Windows SAPI (System.Speech)** - Windows only
 
-### Platform Desteği
+### Platform Support
 
-Proje Windows platformu için optimize edilmiştir. Linux/macOS desteği için:
-- ScreenCapture servisi platform-specific implementasyon gerektirir
-- System.Drawing.Common alternatifi (SkiaSharp, ImageSharp) kullanılabilir
+The project is optimized for the Windows platform. For Linux/macOS support:
+- ScreenCapture service requires platform-specific implementation
+- System.Drawing.Common alternatives (SkiaSharp, ImageSharp) can be used
 
-## 🤝 Katkıda Bulunma
+## 🤝 Contributing
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit yapın (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 Lisans
+## 📄 License
 
-Bu proje eğitim amaçlıdır.
+This project is for educational purposes.
 
-## 👨‍💻 Geliştirici
+## 👨‍💻 Developer
 
-C# ve .NET 8 ile SOLID prensiplere uygun, modüler mimari örneği.
+A modular architecture example using C# and .NET 8, following SOLID principles.
 
 ---
 
-**Not**: Tesseract dil dosyalarını indirmeyi unutmayın, aksi takdirde OCR özelliği çalışmayacaktır!
-
+**Note**: Don't forget to download Tesseract language data files, otherwise the OCR feature will not work!
