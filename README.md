@@ -5,7 +5,7 @@ Modern, modular .NET 8 WPF desktop application following SOLID principles.
 ## 🎯 Features
 
 - **📷 Screen Capture**: Capture full screen or select a region
-- **🔍 OCR (Optical Character Recognition)**: Multi-language text extraction using Tesseract OCR
+- **🔍 OCR (Optical Character Recognition)**: Multi-language text extraction using OpenCV for image preprocessing and Tesseract OCR for text recognition
 - **💾 Multi-Format Export**: Save in TXT, PDF, DOCX formats
 - **🔊 Text-to-Speech**: Convert text to speech (WAV format)
 
@@ -19,7 +19,7 @@ The project has a layered, modular architecture where each layer is designed as 
 TextCaptureApp/
 ├── TextCaptureApp.Core          # Interfaces, DTOs, models
 ├── TextCaptureApp.ScreenCapture # Screen capture service
-├── TextCaptureApp.Ocr           # OCR service (Tesseract)
+├── TextCaptureApp.Ocr           # OCR service (OpenCV + Tesseract)
 ├── TextCaptureApp.Export        # Export services (PDF, DOCX, TXT)
 ├── TextCaptureApp.Tts           # Text-to-Speech service
 └── TextCaptureApp.UI            # WPF User Interface
@@ -36,7 +36,8 @@ TextCaptureApp/
 - **.NET 8** (Windows)
 - **WPF** (Windows Presentation Foundation)
 - **Dependency Injection** (Microsoft.Extensions.Hosting)
-- **Tesseract OCR** - Text recognition
+- **OpenCV (OpenCvSharp)** - Image preprocessing (resize, denoising, thresholding, morphological operations)
+- **Tesseract OCR** - Text recognition engine
 - **iTextSharp** - PDF export
 - **DocumentFormat.OpenXml** - DOCX export
 - **NAudio** - Audio file processing
